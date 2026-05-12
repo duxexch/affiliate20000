@@ -3,20 +3,32 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Affiliate Marketing Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: offers
+    description: Affiliate offers
+  - name: categories
+    description: Offer categories
+  - name: clicks
+    description: Click tracking
+  - name: admin
+    description: Admin operations
+  - name: seo
+    description: SEO settings
+  - name: analytics
+    description: Analytics data
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +36,470 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── Offers ───────────────────────────────────────────────────────────────
+  /offers:
+    get:
+      operationId: listOffers
+      tags: [offers]
+      summary: List offers
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 12
+        - name: categoryId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: search
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: featured
+          in: query
+          schema:
+            type: ["boolean", "null"]
+        - name: trending
+          in: query
+          schema:
+            type: ["boolean", "null"]
+        - name: lang
+          in: query
+          schema:
+            type: string
+            default: en
+      responses:
+        "200":
+          description: Paginated list of offers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfferListResponse"
+    post:
+      operationId: createOffer
+      tags: [offers]
+      summary: Create offer (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfferInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Offer"
+
+  /offers/featured:
+    get:
+      operationId: getFeaturedOffers
+      tags: [offers]
+      summary: Get featured offers
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 6
+        - name: lang
+          in: query
+          schema:
+            type: string
+            default: en
+      responses:
+        "200":
+          description: Featured offers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Offer"
+
+  /offers/trending:
+    get:
+      operationId: getTrendingOffers
+      tags: [offers]
+      summary: Get trending offers
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 6
+        - name: lang
+          in: query
+          schema:
+            type: string
+            default: en
+      responses:
+        "200":
+          description: Trending offers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Offer"
+
+  /offers/slug/{slug}:
+    get:
+      operationId: getOfferBySlug
+      tags: [offers]
+      summary: Get offer by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Single offer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Offer"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /offers/{id}:
+    get:
+      operationId: getOffer
+      tags: [offers]
+      summary: Get offer by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Single offer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Offer"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateOffer
+      tags: [offers]
+      summary: Update offer (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfferUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Offer"
+    delete:
+      operationId: deleteOffer
+      tags: [offers]
+      summary: Delete offer (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Categories ───────────────────────────────────────────────────────────
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List categories
+      parameters:
+        - name: lang
+          in: query
+          schema:
+            type: string
+            default: en
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+    post:
+      operationId: createCategory
+      tags: [categories]
+      summary: Create category (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+
+  /categories/{id}:
+    patch:
+      operationId: updateCategory
+      tags: [categories]
+      summary: Update category (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+    delete:
+      operationId: deleteCategory
+      tags: [categories]
+      summary: Delete category (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Click tracking ───────────────────────────────────────────────────────
+  /clicks/track:
+    post:
+      operationId: trackClick
+      tags: [clicks]
+      summary: Track offer click
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClickInput"
+      responses:
+        "200":
+          description: Click tracked, returns affiliate URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClickResponse"
+
+  # ─── Admin Auth ───────────────────────────────────────────────────────────
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAuthData"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/logout:
+    post:
+      operationId: adminLogout
+      tags: [admin]
+      summary: Admin logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/me:
+    get:
+      operationId: adminMe
+      tags: [admin]
+      summary: Get current admin
+      responses:
+        "200":
+          description: Current admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ─── Analytics ────────────────────────────────────────────────────────────
+  /analytics/dashboard:
+    get:
+      operationId: getAnalyticsDashboard
+      tags: [analytics]
+      summary: Get dashboard stats
+      responses:
+        "200":
+          description: Dashboard analytics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /analytics/top-offers:
+    get:
+      operationId: getTopOffers
+      tags: [analytics]
+      summary: Get top offers by clicks
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: Top offers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OfferClickStat"
+
+  /analytics/clicks-over-time:
+    get:
+      operationId: getClicksOverTime
+      tags: [analytics]
+      summary: Get clicks over time
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: Clicks over time
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClicksTimePoint"
+
+  # ─── SEO Settings ─────────────────────────────────────────────────────────
+  /seo/settings:
+    get:
+      operationId: getSeoSettings
+      tags: [seo]
+      summary: Get SEO settings
+      responses:
+        "200":
+          description: SEO settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeoSettings"
+    patch:
+      operationId: updateSeoSettings
+      tags: [seo]
+      summary: Update SEO settings (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeoSettingsUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeoSettings"
+
+  /seo/sitemap:
+    get:
+      operationId: getSitemap
+      tags: [seo]
+      summary: Get XML sitemap data
+      responses:
+        "200":
+          description: Sitemap entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SitemapEntry"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +507,410 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required: [success]
+
+    # ─── Offer ──────────────────────────────────────────────────────────────
+    Offer:
+      type: object
+      required: [id, title, slug, affiliateUrl, imageUrl, rating, clickCount, isActive, isFeatured, isTrending, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        titleAr:
+          type: ["string", "null"]
+        slug:
+          type: string
+        shortDescription:
+          type: ["string", "null"]
+        shortDescriptionAr:
+          type: ["string", "null"]
+        longDescription:
+          type: ["string", "null"]
+        longDescriptionAr:
+          type: ["string", "null"]
+        affiliateUrl:
+          type: string
+        imageUrl:
+          type: string
+        ctaText:
+          type: ["string", "null"]
+        ctaTextAr:
+          type: ["string", "null"]
+        rating:
+          type: number
+        categoryId:
+          type: ["integer", "null"]
+        category:
+          $ref: "#/components/schemas/Category"
+          nullable: true
+        seoTitle:
+          type: ["string", "null"]
+        seoTitleAr:
+          type: ["string", "null"]
+        seoDescription:
+          type: ["string", "null"]
+        seoDescriptionAr:
+          type: ["string", "null"]
+        keywords:
+          type: ["string", "null"]
+        faqSchema:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        isFeatured:
+          type: boolean
+        isTrending:
+          type: boolean
+        sortOrder:
+          type: integer
+        clickCount:
+          type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: ["string", "null"]
+
+    OfferInput:
+      type: object
+      required: [title, slug, affiliateUrl, imageUrl]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        titleAr:
+          type: string
+        slug:
+          type: string
+          minLength: 1
+        shortDescription:
+          type: string
+        shortDescriptionAr:
+          type: string
+        longDescription:
+          type: string
+        longDescriptionAr:
+          type: string
+        affiliateUrl:
+          type: string
+        imageUrl:
+          type: string
+        ctaText:
+          type: string
+        ctaTextAr:
+          type: string
+        rating:
+          type: number
+          minimum: 0
+          maximum: 5
+        categoryId:
+          type: integer
+        seoTitle:
+          type: string
+        seoTitleAr:
+          type: string
+        seoDescription:
+          type: string
+        seoDescriptionAr:
+          type: string
+        keywords:
+          type: string
+        faqSchema:
+          type: string
+        isActive:
+          type: boolean
+        isFeatured:
+          type: boolean
+        isTrending:
+          type: boolean
+        sortOrder:
+          type: integer
+
+    OfferUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        titleAr:
+          type: string
+        slug:
+          type: string
+        shortDescription:
+          type: string
+        shortDescriptionAr:
+          type: string
+        longDescription:
+          type: string
+        longDescriptionAr:
+          type: string
+        affiliateUrl:
+          type: string
+        imageUrl:
+          type: string
+        ctaText:
+          type: string
+        ctaTextAr:
+          type: string
+        rating:
+          type: number
+        categoryId:
+          type: ["integer", "null"]
+        seoTitle:
+          type: string
+        seoTitleAr:
+          type: string
+        seoDescription:
+          type: string
+        seoDescriptionAr:
+          type: string
+        keywords:
+          type: string
+        faqSchema:
+          type: string
+        isActive:
+          type: boolean
+        isFeatured:
+          type: boolean
+        isTrending:
+          type: boolean
+        sortOrder:
+          type: integer
+
+    OfferListResponse:
+      type: object
+      required: [offers, total, page, limit, totalPages]
+      properties:
+        offers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Offer"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+
+    # ─── Category ────────────────────────────────────────────────────────────
+    Category:
+      type: object
+      required: [id, name, slug, offerCount]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        nameAr:
+          type: ["string", "null"]
+        slug:
+          type: string
+        description:
+          type: ["string", "null"]
+        icon:
+          type: ["string", "null"]
+        offerCount:
+          type: integer
+
+    CategoryInput:
+      type: object
+      required: [name, slug]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        nameAr:
+          type: string
+        slug:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        icon:
+          type: string
+
+    CategoryUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        nameAr:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+
+    # ─── Clicks ──────────────────────────────────────────────────────────────
+    ClickInput:
+      type: object
+      required: [offerId]
+      properties:
+        offerId:
+          type: integer
+        referrer:
+          type: ["string", "null"]
+        userAgent:
+          type: ["string", "null"]
+
+    ClickResponse:
+      type: object
+      required: [affiliateUrl]
+      properties:
+        affiliateUrl:
+          type: string
+
+    # ─── Admin ───────────────────────────────────────────────────────────────
+    AdminLoginInput:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    AdminAuthData:
+      type: object
+      required: [success, user]
+      properties:
+        success:
+          type: boolean
+        user:
+          $ref: "#/components/schemas/AdminUser"
+
+    AdminUser:
+      type: object
+      required: [id, username, role]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        role:
+          type: string
+
+    # ─── Analytics ───────────────────────────────────────────────────────────
+    DashboardStats:
+      type: object
+      required: [totalOffers, totalClicks, totalCategories, clicksToday, clicksThisWeek, clicksThisMonth]
+      properties:
+        totalOffers:
+          type: integer
+        totalClicks:
+          type: integer
+        totalCategories:
+          type: integer
+        clicksToday:
+          type: integer
+        clicksThisWeek:
+          type: integer
+        clicksThisMonth:
+          type: integer
+
+    OfferClickStat:
+      type: object
+      required: [offerId, title, slug, imageUrl, totalClicks]
+      properties:
+        offerId:
+          type: integer
+        title:
+          type: string
+        slug:
+          type: string
+        imageUrl:
+          type: string
+        totalClicks:
+          type: integer
+
+    ClicksTimePoint:
+      type: object
+      required: [date, clicks]
+      properties:
+        date:
+          type: string
+        clicks:
+          type: integer
+
+    # ─── SEO ─────────────────────────────────────────────────────────────────
+    SeoSettings:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: integer
+        siteTitle:
+          type: ["string", "null"]
+        siteTitleAr:
+          type: ["string", "null"]
+        siteDescription:
+          type: ["string", "null"]
+        siteDescriptionAr:
+          type: ["string", "null"]
+        keywords:
+          type: ["string", "null"]
+        robotsTxt:
+          type: ["string", "null"]
+        googleAnalyticsId:
+          type: ["string", "null"]
+        googleSearchConsoleId:
+          type: ["string", "null"]
+        ogImage:
+          type: ["string", "null"]
+        allowIndexing:
+          type: boolean
+
+    SeoSettingsUpdate:
+      type: object
+      properties:
+        siteTitle:
+          type: string
+        siteTitleAr:
+          type: string
+        siteDescription:
+          type: string
+        siteDescriptionAr:
+          type: string
+        keywords:
+          type: string
+        robotsTxt:
+          type: string
+        googleAnalyticsId:
+          type: string
+        googleSearchConsoleId:
+          type: string
+        ogImage:
+          type: string
+        allowIndexing:
+          type: boolean
+
+    SitemapEntry:
+      type: object
+      required: [url, priority, changefreq]
+      properties:
+        url:
+          type: string
+        priority:
+          type: number
+        changefreq:
+          type: string
+        lastmod:
+          type: ["string", "null"]
