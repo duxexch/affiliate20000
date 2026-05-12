@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "q8eAMMNiF8jteuZKvMVvz"
+uri = "file://hostinger-deploy.zip"
+type = "unspecified"
+title = "AffiliateDeals — Hostinger Deploy Package (dux-exch.com)"
