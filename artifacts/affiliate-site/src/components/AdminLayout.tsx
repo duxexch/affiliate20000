@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { useAdminLogout } from "@workspace/api-client-react";
@@ -30,6 +30,15 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [mobileNavOpen]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -38,7 +47,21 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="max-w-md w-full rounded-2xl border border-border/50 bg-secondary/20 p-6 text-center space-y-3">
+          <p className="font-bold text-lg">Admin session expired</p>
+          <p className="text-sm text-muted-foreground">
+            Please sign in again to continue.
+          </p>
+          <Button asChild className="font-bold">
+            <Link href="/admin/login">Go to Login</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const closeMobileNav = () => setMobileNavOpen(false);
 
@@ -115,7 +138,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
       <aside
         className={[
-          "md:hidden fixed top-0 left-0 z-50 w-64 h-screen bg-secondary/30 border-r border-border/50 flex flex-col overflow-y-auto",
+          "md:hidden fixed top-0 left-0 z-50 w-[85vw] max-w-[320px] h-screen bg-secondary/30 border-r border-border/50 flex flex-col overflow-y-auto",
           mobileNavOpen ? "translate-x-0" : "-translate-x-full",
           "transition-transform duration-200 ease-out",
         ].join(" ")}
@@ -125,7 +148,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto overflow-x-hidden">
         {/* Mobile header */}
         <div className="md:hidden sticky top-0 z-30 bg-background/80 backdrop-blur px-4 py-3 border-b border-border/50">
           <div className="flex items-center justify-between gap-3">
