@@ -54,6 +54,7 @@ cat > "$OUT/package.json" << 'EOF'
   "type": "module",
   "main": "server.js",
   "scripts": {
+    "build": "node -e \"console.log('hostinger-deploy: build skipped (prebuilt dist/public included)')\"",
     "start": "node server.js"
   },
   "engines": {
