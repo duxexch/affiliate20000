@@ -7,7 +7,7 @@ import path from "node:path";
 import { existsSync } from "node:fs";
 import router from "./routes";
 import { logger } from "./lib/logger";
-import { db, offersTable, categoriesTable } from "@workspace/db";
+import { db, offersTable, categoriesTable, seoSettingsTable } from "@workspace/db";
 import { and, desc, eq, ilike, sql } from "drizzle-orm";
 
 const app: Express = express();
@@ -158,7 +158,8 @@ ${body}
 // Minimal HTML for better indexing than “SPA-only skeleton”
 // Minimal deterministic HTML so bots can index without waiting for React JS.
 async function renderHomeHtml() {
-  const [featured, categories] = await Promise.all([
+  const [seoRows, featured, categories] = await Promise.all([
+    db.select().from(seoSettingsTable).limit(1),
     db
       .select({
         slug: offersTable.slug,
@@ -178,6 +179,8 @@ async function renderHomeHtml() {
       .orderBy(desc(categoriesTable.createdAt))
       .limit(12),
   ]);
+
+  const settings = seoRows?.[0];
 
   const body = `
   <h1>Affiliate Offers</h1>
@@ -203,8 +206,9 @@ async function renderHomeHtml() {
   `;
 
   return buildPage({
-    title: "Best Affiliate Offers",
-    description: "Discover top affiliate offers and bonuses.",
+    title: settings?.siteTitle ?? "Best Affiliate Offers",
+    description:
+      settings?.siteDescription ?? "Discover top affiliate offers and bonuses.",
     body,
   });
 }

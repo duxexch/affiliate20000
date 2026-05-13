@@ -6,7 +6,7 @@
  * Required environment variables (set in hPanel → Node.js → Environment Variables):
  *   DATABASE_URL   = postgresql://user:pass@host:5432/dbname
  *   NODE_ENV       = production
- *   SITE_URL       = https://dux-exch.com
+ *   SITE_URL       = https://dux-ex.com
  *
  * Hostinger auto-assigns PORT — do NOT set it manually.
  */
@@ -23,6 +23,7 @@ process.env.STATIC_DIR =
 process.env.NODE_ENV = process.env.NODE_ENV || "production";
 
 // Load the compiled Express server
+// @ts-ignore - dist is produced at build time (during packaging)
 import("./dist/index.mjs").catch((err) => {
   console.error("[AffiliateDeals] Failed to start server:", err);
   process.exit(1);

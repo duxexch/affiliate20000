@@ -1,4 +1,4 @@
-# Hostinger Deployment Guide — dux-exch.com
+# Hostinger Deployment Guide — dux-ex.com
 
 ## Overview
 
@@ -10,7 +10,7 @@ The single Express server serves both the API and the React SPA static files.
 ## Step 0 — Prerequisites
 
 - Hostinger Business Shared Hosting or higher (includes Node.js Manager)
-- Domain `dux-exch.com` pointed to your Hostinger account
+- Domain `dux-ex.com` pointed to your Hostinger account
 - A PostgreSQL database (see **Database** section below)
 
 ---
@@ -78,7 +78,7 @@ You should now have:
 | Application mode | **Production** |
 | Application root | `/home/username/affiliatedeals` |
 | Application startup file | **server.js** |
-| Application URL | `dux-exch.com` |
+| Application URL | `dux-ex.com` |
 
 3. Click **Create**
 
@@ -92,7 +92,7 @@ Inside the Node.js app settings, find **Environment Variables** and add:
 |---|---|
 | `DATABASE_URL` | `postgresql://...` (from Step 1) |
 | `NODE_ENV` | `production` |
-| `SITE_URL` | `https://dux-exch.com` |
+| `SITE_URL` | `https://dux-ex.com` |
 | `SESSION_SECRET` | any random 64-character string |
 
 ---
@@ -129,8 +129,8 @@ pnpm --filter @workspace/db run push
 ## Step 7 — Restart & Go Live
 
 1. In hPanel → Node.js → click **Restart**
-2. Visit `https://dux-exch.com` — your site should be live!
-3. Visit `https://dux-exch.com/admin` — login with `admin` / `admin123`
+2. Visit `https://dux-ex.com` — your site should be live!
+3. Visit `https://dux-ex.com/admin` — login with `admin` / `admin123`
 4. **Change the admin password immediately** in Admin → Settings
 
 ---
@@ -139,12 +139,12 @@ pnpm --filter @workspace/db run push
 
 | URL | Expected |
 |---|---|
-| `https://dux-exch.com/` | Homepage |
-| `https://dux-exch.com/offers` | All Offers page |
-| `https://dux-exch.com/admin` | Admin login |
-| `https://dux-exch.com/api/healthz` | `{"status":"ok"}` |
-| `https://dux-exch.com/api/seo/sitemap.xml` | XML sitemap |
-| `https://dux-exch.com/sitemap.xml` | Redirects to above |
+| `https://dux-ex.com/` | Homepage |
+| `https://dux-ex.com/offers` | All Offers page |
+| `https://dux-ex.com/admin` | Admin login |
+| `https://dux-ex.com/api/healthz` | `{"status":"ok"}` |
+| `https://dux-ex.com/api/seo/sitemap.xml` | XML sitemap |
+| `https://dux-ex.com/sitemap.xml` | Redirects to above |
 
 ---
 

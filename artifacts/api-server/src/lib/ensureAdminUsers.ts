@@ -55,6 +55,12 @@ export async function ensureAdminUsers(): Promise<void> {
         // Always upsert the admin row so the stored hash matches bcryptjs.compare.
         const passwordHash = await bcrypt.hash(password, saltRounds);
 
+        const before = await pool.query(
+            `SELECT password_hash FROM public.admin_users WHERE username = $1 LIMIT 1;`,
+            [username],
+        );
+        const beforeHash = before.rows?.[0]?.password_hash as string | undefined;
+
         await pool.query(
             `
       INSERT INTO public.admin_users (username, password_hash, role)
@@ -67,7 +73,23 @@ export async function ensureAdminUsers(): Promise<void> {
             [username, passwordHash],
         );
 
-        logger.info({ username }, "Admin seeding ensured admin_users row");
+        const after = await pool.query(
+            `SELECT password_hash FROM public.admin_users WHERE username = $1 LIMIT 1;`,
+            [username],
+        );
+        const afterHash = after.rows?.[0]?.password_hash as string | undefined;
+
+        const updated = Boolean(beforeHash && afterHash && beforeHash !== afterHash);
+
+        logger.info(
+            {
+                username,
+                hasPasswordHashBefore: Boolean(beforeHash),
+                hasPasswordHashAfter: Boolean(afterHash),
+                updated,
+            },
+            "Admin seeding ensured admin_users row (password_hash update check)",
+        );
     } catch (err) {
         logger.error({ err }, "Admin seeding failed");
         throw err;

@@ -47,6 +47,8 @@ router.get("/robots.txt", async (req, res) => {
     }
   }
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store, max-age=0, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
   return res.send(content);
 });
 

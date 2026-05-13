@@ -1,14 +1,26 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════════════════════
 #  AffiliateDeals — Hostinger Deployment Package Builder
-#  Domain: dux-exch.com
+#  Domain: dux-ex.com
 #
 #  Usage: bash scripts/create-hostinger-package.sh
 #  Output: hostinger-deploy/ folder + hostinger-deploy.zip
 # ═══════════════════════════════════════════════════════════════════════════════
 set -e
 
-DOMAIN="dux-exch.com"
+# Ensure pnpm is available even in non-login shells (e.g., WSL bash scripts).
+if command -v pnpm >/dev/null 2>&1; then
+  PNPM_CMD="pnpm"
+else
+  PNPM_FALLBACK_BIN="$(npm prefix -g)/bin/pnpm"
+  if [ -x "$PNPM_FALLBACK_BIN" ]; then
+    PNPM_CMD="$PNPM_FALLBACK_BIN"
+  else
+    PNPM_CMD="pnpm"
+  fi
+fi
+
+DOMAIN="dux-ex.com"
 OUT="hostinger-deploy"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -18,12 +30,20 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 echo ""
 echo "▶ Step 1: Building server bundle..."
-pnpm --filter @workspace/api-server run build
+if "$PNPM_CMD" --version >/dev/null 2>&1; then
+  "$PNPM_CMD" --filter @workspace/api-server run build
+else
+  echo "⚠️  pnpm not available here — skipping server build (using existing artifacts/api-server/dist)"
+fi
 
 echo ""
 echo "▶ Step 2: Building React frontend (SITE_URL=$DOMAIN)..."
-BASE_PATH=/ NODE_ENV=production VITE_SITE_URL="https://$DOMAIN" \
-  pnpm --filter @workspace/affiliate-site run build
+if "$PNPM_CMD" --version >/dev/null 2>&1; then
+  BASE_PATH=/ NODE_ENV=production VITE_SITE_URL="https://$DOMAIN" \
+    "$PNPM_CMD" --filter @workspace/affiliate-site run build
+else
+  echo "⚠️  pnpm not available here — skipping frontend build (using existing artifacts/affiliate-site/dist)"
+fi
 
 echo ""
 echo "▶ Step 3: Assembling deployment package..."
@@ -50,7 +70,7 @@ cat > "$OUT/package.json" << 'EOF'
 {
   "name": "affiliatedeals",
   "version": "1.0.0",
-  "description": "Affiliate Marketing Platform — dux-exch.com",
+  "description": "Affiliate Marketing Platform — dux-ex.com",
   "type": "module",
   "main": "server.js",
   "scripts": {
@@ -65,16 +85,30 @@ EOF
 
 echo ""
 echo "▶ Step 4: Creating ZIP archive..."
-zip -r "hostinger-deploy.zip" "$OUT/" -x "*.DS_Store" "*.map"
+ZIP_NAME="${HOSTINGER_ZIP_NAME:-hostinger-standalone-latest.zip}"
+rm -f "$ZIP_NAME"
+# Preserve previous behavior: exclude source maps
+find "$OUT" -name "*.map" -type f -delete 2>/dev/null || true
+
+# Create ZIP using Windows PowerShell (zip utility isn't available in this WSL environment)
+if command -v wslpath >/dev/null 2>&1; then
+  WIN_PWD="$(wslpath -w "$PWD")"
+  WIN_OUT="${WIN_PWD}\\${OUT}"
+  WIN_ZIP="${WIN_PWD}\\${ZIP_NAME}"
+  powershell.exe -NoProfile -Command "Compress-Archive -Path '${WIN_OUT}\\*' -DestinationPath '${WIN_ZIP}' -Force"
+else
+  # Fallback: use relative paths (may work depending on WSL/PowerShell cwd mapping)
+  powershell.exe -NoProfile -Command "Compress-Archive -Path '${OUT}\\*' -DestinationPath '${ZIP_NAME}' -Force"
+fi
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  ✅ Package ready!"
 echo ""
 echo "  📁 Folder: hostinger-deploy/"
-echo "  📦 Archive: hostinger-deploy.zip  (upload this to Hostinger)"
+echo "  � Archive: $ZIP_NAME  (upload this to Hostinger)"
 echo ""
-echo "  📋 Hostinger hPanel Setup:"
+echo "  �📋 Hostinger hPanel Setup:"
 echo "     1. Upload hostinger-deploy.zip and extract to your home dir"
 echo "     2. hPanel → Node.js Manager → Create Application:"
 echo "        • Node.js version: 20.x"

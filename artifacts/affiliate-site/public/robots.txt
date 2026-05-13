@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /admin/
 
-Sitemap: https://dux-exch.com/sitemap.xml
+Sitemap: https://dux-ex.com/sitemap.xml

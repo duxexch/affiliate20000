@@ -1,7 +1,7 @@
 {
   "name": "affiliatedeals",
   "version": "1.0.0",
-  "description": "Affiliate Marketing Platform — dux-exch.com",
+  "description": "Affiliate Marketing Platform — dux-ex.com",
   "type": "module",
   "main": "server.js",
   "scripts": {
