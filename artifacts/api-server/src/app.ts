@@ -13,16 +13,17 @@ const app: Express = express();
 // express-rate-limit expects `trust proxy` to match when `X-Forwarded-For` exists.
 // When running behind a reverse proxy (shared hosting / CDN), enable it.
 const trustProxyRaw = process.env.TRUST_PROXY;
-const trustProxy: boolean | number =
-  trustProxyRaw === undefined
-    ? process.env.NODE_ENV === "production"
-    : trustProxyRaw === "true"
-      ? true
-      : trustProxyRaw === "false"
-        ? false
-        : Number.isNaN(Number(trustProxyRaw))
-          ? true
-          : Number(trustProxyRaw);
+const trustProxy: boolean =
+  trustProxyRaw === undefined || trustProxyRaw.trim() === ""
+    ? true
+    : trustProxyRaw === "false"
+      ? false
+      : true;
+
+logger.info(
+  { TRUST_PROXY_RAW: trustProxyRaw, trustProxy },
+  "trust proxy configuration",
+);
 
 app.set("trust proxy", trustProxy);
 
