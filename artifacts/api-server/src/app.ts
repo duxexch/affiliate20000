@@ -10,6 +10,22 @@ import { logger } from "./lib/logger";
 
 const app: Express = express();
 
+// express-rate-limit expects `trust proxy` to match when `X-Forwarded-For` exists.
+// When running behind a reverse proxy (shared hosting / CDN), enable it.
+const trustProxyRaw = process.env.TRUST_PROXY;
+const trustProxy: boolean | number =
+  trustProxyRaw === undefined
+    ? process.env.NODE_ENV === "production"
+    : trustProxyRaw === "true"
+      ? true
+      : trustProxyRaw === "false"
+        ? false
+        : Number.isNaN(Number(trustProxyRaw))
+          ? true
+          : Number(trustProxyRaw);
+
+app.set("trust proxy", trustProxy);
+
 // ── Security headers ────────────────────────────────────────────────────────
 app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -68,6 +84,27 @@ app.use("/api/clicks", clickLimiter);
 
 // ── API routes ────────────────────────────────────────────────────────────────
 app.use("/api", router);
+
+// ── Global error handler (log underlying DB/Postgres errors) ────────────────
+app.use(
+  (
+    err: unknown,
+    _req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction,
+  ) => {
+    // Drizzle/pg often nests the real error inside `cause`
+    const anyErr = err as { message?: string; cause?: unknown };
+    logger.error(
+      { err: anyErr, cause: anyErr?.cause, message: anyErr?.message },
+      "Unhandled request error",
+    );
+
+    if (res.headersSent) return;
+
+    res.status(500).json({ error: "Internal Server Error" });
+  },
+);
 
 // ── Serve frontend static files in production ─────────────────────────────────
 // Shared hosting: Express serves both the API and the built React SPA
